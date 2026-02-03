@@ -29,10 +29,8 @@ class Tokenizer:
 
     @property
     def pad_token_id(self) -> int:
-        pad_id = self._tokenizer.pad_token_id
-        if pad_id is not None:
-            return pad_id
-        eos_id = self._tokenizer.eos_token_id
-        if eos_id is not None:
-            return eos_id
+        if self._tokenizer.pad_token_id is not None:
+            return self._tokenizer.pad_token_id
+        if self._tokenizer.eos_token_id is not None:
+            return self._tokenizer.eos_token_id
         raise ValueError("No pad_token_id or eos_token_id found in tokenizer")
