@@ -78,7 +78,7 @@ class Attention(nn.Module):
 
     def forward(self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, context: Context):
         k_cache, v_cache = self.k_cache, self.v_cache
-        if k_cache.numel() and v_cache.numel():
+        if k_cache.numel() and v_cache.numel() and context.slot_mapping is not None:
             store_kvcache(k, v, k_cache, v_cache, context.slot_mapping)
         if context.is_prefill:
             if context.block_tables is not None:
@@ -104,5 +104,5 @@ class Attention(nn.Module):
                 block_table=context.block_tables,
                 softmax_scale=self.scale,
                 causal=True,
-            )
+            ).squeeze(1)
         return o
