@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+SUPPORTED_DEVICES = ("cuda", "cpu")
+
 
 @dataclass
 class ModelConfig:
@@ -11,5 +13,5 @@ class ModelConfig:
     def __post_init__(self):
         if self.tensor_parallel_size < 1:
             raise ValueError("tensor_parallel_size must be >= 1")
-        if self.device not in ["cuda", "cpu"]:
-            raise ValueError("device must be 'cuda' or 'cpu'")
+        if self.device not in SUPPORTED_DEVICES:
+            raise ValueError(f"device must be one of {SUPPORTED_DEVICES}")
