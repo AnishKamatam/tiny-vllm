@@ -3,10 +3,10 @@ from transformers import AutoTokenizer
 
 
 class Tokenizer:
-    def __init__(self, model_path: str):
+    def __init__(self, model_path: str, trust_remote_code: bool = False):
         self._tokenizer = AutoTokenizer.from_pretrained(
             model_path,
-            trust_remote_code=True,
+            trust_remote_code=trust_remote_code,
         )
 
     def encode(self, text: str, add_special_tokens: bool = True) -> List[int]:
@@ -29,8 +29,10 @@ class Tokenizer:
 
     @property
     def pad_token_id(self) -> int:
-        return (
-            self._tokenizer.pad_token_id
-            if self._tokenizer.pad_token_id is not None
-            else self._tokenizer.eos_token_id
-        )
+        pad_id = self._tokenizer.pad_token_id
+        if pad_id is not None:
+            return pad_id
+        eos_id = self._tokenizer.eos_token_id
+        if eos_id is not None:
+            return eos_id
+        raise ValueError("No pad_token_id or eos_token_id found in tokenizer")
