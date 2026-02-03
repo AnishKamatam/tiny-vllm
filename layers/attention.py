@@ -9,7 +9,7 @@ except ImportError:
     flash_attn_varlen_func = None
     flash_attn_with_kvcache = None
 
-from utils.context import get_context
+from utils.context import Context
 
 
 @triton.jit
@@ -47,7 +47,7 @@ def store_kvcache(
     D = num_heads * head_dim
     assert key.stride(-1) == 1 and value.stride(-1) == 1
     assert key.stride(1) == head_dim and value.stride(1) == head_dim
-    assert k_cache.stride(1) == D and v_cache.stride(1) == D
+    assert k_cache.stride(1) == 1 and v_cache.stride(1) == 1
     assert slot_mapping.numel() == N
     store_kvcache_kernel[(N,)](key, key.stride(0), value, value.stride(0), k_cache, v_cache, slot_mapping, D)
 
@@ -61,14 +61,22 @@ class Attention(nn.Module):
         num_kv_heads: int,
     ):
         super().__init__()
+        if flash_attn_varlen_func is None or flash_attn_with_kvcache is None:
+            raise ImportError(
+                "flash-attn is not installed. Please install it, e.g., with "
+                "`pip install flash-attn`"
+            )
         self.num_heads = num_heads
         self.head_dim = head_dim
         self.scale = scale
         self.num_kv_heads = num_kv_heads
         self.k_cache = self.v_cache = torch.tensor([])
 
-    def forward(self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor):
-        context = get_context()
+    def set_kv_cache(self, k_cache: torch.Tensor, v_cache: torch.Tensor):
+        self.k_cache = k_cache
+        self.v_cache = v_cache
+
+    def forward(self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, context: Context):
         k_cache, v_cache = self.k_cache, self.v_cache
         if k_cache.numel() and v_cache.numel():
             store_kvcache(k, v, k_cache, v_cache, context.slot_mapping)
