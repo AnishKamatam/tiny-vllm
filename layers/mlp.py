@@ -16,10 +16,9 @@ class MLP(nn.Module):
         
         if activation == "swiglu":
             self.gate_up_proj = nn.Linear(hidden_size, 2 * intermediate_size, bias=bias)
-            self.down_proj = nn.Linear(intermediate_size, hidden_size, bias=bias)
         else:
             self.gate_proj = nn.Linear(hidden_size, intermediate_size, bias=bias)
-            self.down_proj = nn.Linear(intermediate_size, hidden_size, bias=bias)
+        self.down_proj = nn.Linear(intermediate_size, hidden_size, bias=bias)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if self.activation == "swiglu":
