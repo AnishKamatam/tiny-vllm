@@ -27,7 +27,7 @@ class TransformerBlock(nn.Module):
         num_heads: int,
         head_dim: int,
         intermediate_size: int,
-        mlp_activation: str = "swiglu",
+        mlp_activation: Literal["swiglu", "gelu", "relu"] = "swiglu",
         norm_eps: float = 1e-6,
         bias: bool = False,
     ):
