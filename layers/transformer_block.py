@@ -8,19 +8,6 @@ from .norm import RMSNorm
 
 
 class TransformerBlock(nn.Module):
-    """
-    A single transformer block combining attention and MLP with residual connections.
-    Uses pre-norm architecture (normalization before attention/MLP).
-    
-    Args:
-        hidden_size: Hidden dimension size
-        num_heads: Number of attention heads
-        head_dim: Dimension per attention head
-        intermediate_size: MLP intermediate dimension
-        mlp_activation: Activation function for MLP ("swiglu", "gelu", or "relu")
-        norm_eps: Epsilon for RMSNorm
-        bias: Whether to use bias in linear layers
-    """
     def __init__(
         self,
         hidden_size: int,
@@ -34,13 +21,7 @@ class TransformerBlock(nn.Module):
         super().__init__()
 
         self.attention = Attention(hidden_size, num_heads, head_dim, bias=bias)
-        self.mlp = MLP(
-            hidden_size,
-            intermediate_size,
-            activation=mlp_activation,
-            bias=bias,
-        )
-
+        self.mlp = MLP(hidden_size, intermediate_size, activation=mlp_activation, bias=bias)
         self.attn_norm = RMSNorm(hidden_size, eps=norm_eps)
         self.mlp_norm = RMSNorm(hidden_size, eps=norm_eps)
 
@@ -51,7 +32,6 @@ class TransformerBlock(nn.Module):
         kv_cache: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
         use_cache: bool = False,
     ) -> Tuple[torch.Tensor, Optional[Tuple[torch.Tensor, torch.Tensor]]]:
-
         residual = hidden_states
         hidden_states = self.attn_norm(hidden_states)
 
@@ -66,9 +46,7 @@ class TransformerBlock(nn.Module):
 
         residual = hidden_states
         hidden_states = self.mlp_norm(hidden_states)
-
         mlp_output = self.mlp(hidden_states)
-
         hidden_states = residual + mlp_output
 
         return hidden_states, kv_cache
