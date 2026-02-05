@@ -12,15 +12,19 @@ class TransformerBlock(nn.Module):
         self,
         hidden_size: int,
         num_heads: int,
+        num_kv_heads: int,
         head_dim: int,
         intermediate_size: int,
         mlp_activation: Literal["swiglu", "gelu", "relu"] = "swiglu",
         norm_eps: float = 1e-6,
+        rope_base: float = 10000.0,
         bias: bool = False,
     ):
         super().__init__()
 
-        self.attention = Attention(hidden_size, num_heads, head_dim, bias=bias)
+        self.attention = Attention(
+            hidden_size, num_heads, num_kv_heads, head_dim, rope_base=rope_base, bias=bias
+        )
         self.mlp = MLP(hidden_size, intermediate_size, activation=mlp_activation, bias=bias)
         self.attn_norm = RMSNorm(hidden_size, eps=norm_eps)
         self.mlp_norm = RMSNorm(hidden_size, eps=norm_eps)
