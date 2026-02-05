@@ -3,9 +3,19 @@ import torch.nn as nn
 import torch.nn.functional as F
 from typing import Optional, Tuple
 
+from layers.rope import RoPE
+
 
 class Attention(nn.Module):
-    def __init__(self, hidden_size, num_heads, head_dim, bias=False):
+    def __init__(
+        self,
+        hidden_size: int,
+        num_heads: int,
+        head_dim: int,
+        rope_base: float = 10000.0,
+        rope_base: float = 10000.0,
+        bias: bool = False,
+    ):
         super().__init__()
         assert hidden_size == num_heads * head_dim
 
@@ -16,9 +26,12 @@ class Attention(nn.Module):
         self.qkv_proj = nn.Linear(hidden_size, 3 * hidden_size, bias=bias)
         self.out_proj = nn.Linear(hidden_size, hidden_size, bias=bias)
 
+        self.rope = RoPE(head_dim, base=rope_base)
+
     def forward(
         self,
         hidden_states: torch.Tensor,
+        position_offset: int = 0,
         kv_cache: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
         use_cache: bool = False,
     ):
@@ -31,7 +44,13 @@ class Attention(nn.Module):
         k = k.view(B, T, self.num_heads, self.head_dim).transpose(1, 2)
         v = v.view(B, T, self.num_heads, self.head_dim).transpose(1, 2)
 
-        # Handle KV cache
+        # Apply RoPE to Q and K
+        positions = torch.arange(
+            position_offset, position_offset + T, device=q.device, dtype=torch.float32
+        )
+        q, k = self.rope(q, k, positions)
+
+        # Handle KV cache (after RoPE, so cached keys are already rotated)
         if kv_cache is not None:
             k_cache, v_cache = kv_cache
             k = torch.cat([k_cache, k], dim=2)
