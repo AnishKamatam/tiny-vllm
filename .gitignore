@@ -60,7 +60,11 @@ dmypy.json
 *.ckpt
 *.safetensors
 *.bin
-models/
+models/*.pt
+models/*.pth
+models/*.ckpt
+models/*.safetensors
+models/*.bin
 checkpoints/
 *.h5
 *.hdf5
