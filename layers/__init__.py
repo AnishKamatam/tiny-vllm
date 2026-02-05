@@ -4,6 +4,7 @@ from .mlp import MLP
 from .norm import RMSNorm
 from .rope import RoPE
 from .transformer_block import TransformerBlock
+from .lmhead import LMHead
 
 __all__ = [
     "Attention",
@@ -12,4 +13,5 @@ __all__ = [
     "RoPE",
     "TokenEmbedding",
     "TransformerBlock",
+    "LMHead"
 ]

@@ -11,6 +11,7 @@ class Attention(nn.Module):
         self,
         hidden_size: int,
         num_heads: int,
+        num_kv_heads: int,
         head_dim: int,
         rope_base: float = 10000.0,
         bias: bool = False,
@@ -18,11 +19,24 @@ class Attention(nn.Module):
         super().__init__()
         assert hidden_size == num_heads * head_dim
 
+        if num_heads % num_kv_heads != 0:
+            raise ValueError(
+                f"num_heads ({num_heads}) must be divisible by num_kv_heads ({num_kv_heads})"
+            )
+        if num_heads < num_kv_heads:
+            raise ValueError(
+                f"num_heads ({num_heads}) must be >= num_kv_heads ({num_kv_heads})"
+            )
+
         self.hidden_size = hidden_size
         self.num_heads = num_heads
+        self.num_kv_heads = num_kv_heads
         self.head_dim = head_dim
+        self.num_kv_groups = num_heads // num_kv_heads
 
-        self.qkv_proj = nn.Linear(hidden_size, 3 * hidden_size, bias=bias)
+        self.q_proj = nn.Linear(hidden_size, num_heads * head_dim, bias=bias)
+        self.k_proj = nn.Linear(hidden_size, num_kv_heads * head_dim, bias=bias)
+        self.v_proj = nn.Linear(hidden_size, num_kv_heads * head_dim, bias=bias)
         self.out_proj = nn.Linear(hidden_size, hidden_size, bias=bias)
         self.rope = RoPE(head_dim, base=rope_base)
 
@@ -35,12 +49,13 @@ class Attention(nn.Module):
     ):
         B, T, _ = hidden_states.shape
 
-        qkv = self.qkv_proj(hidden_states)
-        q, k, v = qkv.chunk(3, dim=2)
+        q = self.q_proj(hidden_states)
+        k = self.k_proj(hidden_states)
+        v = self.v_proj(hidden_states)
 
         q = q.view(B, T, self.num_heads, self.head_dim).transpose(1, 2)
-        k = k.view(B, T, self.num_heads, self.head_dim).transpose(1, 2)
-        v = v.view(B, T, self.num_heads, self.head_dim).transpose(1, 2)
+        k = k.view(B, T, self.num_kv_heads, self.head_dim).transpose(1, 2)
+        v = v.view(B, T, self.num_kv_heads, self.head_dim).transpose(1, 2)
 
         positions = torch.arange(
             position_offset, position_offset + T, device=q.device, dtype=torch.float32
@@ -53,6 +68,12 @@ class Attention(nn.Module):
             v = torch.cat([v_cache, v], dim=2)
 
         new_kv_cache = (k, v) if use_cache else None
+
+        # Expand KV heads for GQA: repeat each KV head for its group of Q heads
+        if self.num_kv_groups > 1:
+            k = k.repeat_interleave(self.num_kv_groups, dim=1)
+            v = v.repeat_interleave(self.num_kv_groups, dim=1)
+
         is_causal = q.size(2) == k.size(2)
 
         attn_output = F.scaled_dot_product_attention(q, k, v, is_causal=is_causal)
