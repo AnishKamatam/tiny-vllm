@@ -26,7 +26,7 @@ class Attention(nn.Module):
         self.qkv_proj = nn.Linear(hidden_size, 3 * hidden_size, bias=bias)
         self.out_proj = nn.Linear(hidden_size, hidden_size, bias=bias)
 
-        self.rope = RoPE(head_dim, max_seq_len=max_seq_len, base=rope_base)
+        self.rope = RoPE(head_dim, base=rope_base)
 
     def forward(
         self,
