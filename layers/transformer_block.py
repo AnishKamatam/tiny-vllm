@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from typing import Optional, Tuple
+from typing import Literal, Optional, Tuple
 
 from .attention import Attention
 from .mlp import MLP
@@ -47,6 +47,7 @@ class TransformerBlock(nn.Module):
     def forward(
         self,
         hidden_states: torch.Tensor,
+        position_offset: int = 0,
         kv_cache: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
         use_cache: bool = False,
     ) -> Tuple[torch.Tensor, Optional[Tuple[torch.Tensor, torch.Tensor]]]:
@@ -56,6 +57,7 @@ class TransformerBlock(nn.Module):
 
         attn_output, kv_cache = self.attention(
             hidden_states,
+            position_offset=position_offset,
             kv_cache=kv_cache,
             use_cache=use_cache,
         )
