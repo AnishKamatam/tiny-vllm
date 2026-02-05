@@ -25,7 +25,7 @@ class LlamaConfig:
             num_hidden_layers=hf_config.num_hidden_layers,
             rms_norm_eps=getattr(hf_config, "rms_norm_eps", 1e-6),
             rope_theta=getattr(hf_config, "rope_theta", 10000.0),
-            max_position_embeddings=hf_config.max_position_embeddings,
+            max_position_embeddings=getattr(hf_config, "max_position_embeddings", 4096),
         )
 
     def __post_init__(self):
