@@ -7,7 +7,7 @@ class RoPE(nn.Module):
     def __init__(
         self,
         head_dim: int,
-        max_seq_len: int = 8192,
+        base: float = 10000.0,
         base: float = 10000.0,
     ):
         """
