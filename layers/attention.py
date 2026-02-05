@@ -71,10 +71,8 @@ class Attention(nn.Module):
 
         # Expand KV heads for GQA: repeat each KV head for its group of Q heads
         if self.num_kv_groups > 1:
-            k = k.unsqueeze(2).expand(B, self.num_kv_heads, self.num_kv_groups, -1, self.head_dim)
-            k = k.reshape(B, self.num_heads, -1, self.head_dim)
-            v = v.unsqueeze(2).expand(B, self.num_kv_heads, self.num_kv_groups, -1, self.head_dim)
-            v = v.reshape(B, self.num_heads, -1, self.head_dim)
+            k = k.repeat_interleave(self.num_kv_groups, dim=1)
+            v = v.repeat_interleave(self.num_kv_groups, dim=1)
 
         is_causal = q.size(2) == k.size(2)
 
