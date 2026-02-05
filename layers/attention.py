@@ -12,7 +12,7 @@ class Attention(nn.Module):
         hidden_size: int,
         num_heads: int,
         head_dim: int,
-        max_seq_len: int = 8192,
+        rope_base: float = 10000.0,
         rope_base: float = 10000.0,
         bias: bool = False,
     ):
