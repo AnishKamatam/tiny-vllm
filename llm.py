@@ -41,10 +41,7 @@ class LLM:
         else:
             return_single = False
 
-        results = []
-        for prompt in prompts:
-            result = self._generate_single(prompt, sampling_params)
-            results.append(result)
+        results = [self._generate_single(prompt, sampling_params) for prompt in prompts]
 
         return results[0] if return_single else results
 
