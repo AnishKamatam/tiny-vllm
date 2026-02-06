@@ -114,7 +114,6 @@ class LLM:
         stop_sequences_ids: List[List[int]],
     ) -> bool:
         for stop_seq_ids in stop_sequences_ids:
-            if len(generated_ids) >= len(stop_seq_ids):
-                if generated_ids[-len(stop_seq_ids):] == stop_seq_ids:
-                    return True
+            if len(generated_ids) >= len(stop_seq_ids) and generated_ids[-len(stop_seq_ids):] == stop_seq_ids:
+                return True
         return False
