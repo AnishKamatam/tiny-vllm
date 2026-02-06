@@ -40,7 +40,7 @@ def apply_top_p(logits: torch.Tensor, top_p: float) -> torch.Tensor:
     return logits
 
 
-def sample(logits: torch.Tensor, params: SamplingParams) -> torch.Tensor:
+def sample(logits: torch.Tensor, params: SamplingParams) -> Union[int, torch.Tensor]:
     if logits.dim() == 1:
         logits = logits.unsqueeze(0)
         squeeze_output = True
