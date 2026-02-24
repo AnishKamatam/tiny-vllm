@@ -1,6 +1,6 @@
 import torch
 import torch.nn.functional as F
-from typing import Optional
+from typing import Optional, Union
 
 from .sampling_params import SamplingParams
 
